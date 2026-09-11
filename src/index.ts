@@ -58,7 +58,7 @@ function eligiblePath(path: string): boolean {
 
 function endpoint(value: string): URL {
   const u = new URL(value)
-  if (u.username || u.password || u.search || u.hash ||
+  if (u.username || u.password || u.search || u.hash || u.pathname !== '/' ||
     (u.protocol !== 'https:' && !(u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)))) {
     throw new TypeError('Jelto crawler endpoint must be HTTPS (HTTP loopback is allowed for development)')
   }
@@ -115,11 +115,16 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
         while (queue.length || inFlight.size) {
           while (queue.length && inFlight.size < 2) {
             // UTF-8 size, not JavaScript character count; every batch obeys 64 KiB.
+            // A batch never mixes hostnames: a spoofed or unregistered host on
+            // one event must not block delivery of another hostname's events.
             const events: CrawlEvent[] = []
-            while (queue.length && events.length < batchSize) {
-              const next = queue[0]!
+            const head = queue[0]!.hostname
+            for (let i = 0; i < queue.length && events.length < batchSize;) {
+              const next = queue[i]!
+              if (next.hostname !== head) { i++; continue }
               if (events.length && encoder.encode(JSON.stringify({ events: [...events, next] })).byteLength > 64 * 1024) break
-              events.push(queue.shift()!)
+              events.push(next)
+              queue.splice(i, 1)
             }
             let job: Promise<void>
             job = send(events).catch(() => {}).finally(() => { retained -= events.length; inFlight.delete(job) })
@@ -135,11 +140,14 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
     })
     return draining
   }
+  // A fire-and-forget flush must never surface as an unhandled rejection
+  // inside the customer's request handler.
+  function fireAndForget(): void { flush().catch(() => {}) }
   function track(request: Request, response?: Response, context?: RuntimeContext): boolean {
     try {
       if (seen.has(request) || retained >= maxQueue || (request.method !== 'GET' && request.method !== 'HEAD')) return false
       const ua = request.headers.get('user-agent') ?? ''
-      if (!ua || !hints.test(ua) || encoder.encode(ua).byteLength > 1024 || /[\r\n\0]/.test(ua)) return false
+      if (!ua || encoder.encode(ua).byteLength > 1024 || /[\r\n\0]/.test(ua) || !hints.test(ua)) return false
       const u = new URL(request.url)
       const path = u.pathname
       if (!['https:', 'http:'].includes(u.protocol) || !eligiblePath(path)) return false
@@ -148,9 +156,9 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
       const event: CrawlEvent = { id: crypto.randomUUID(), occurred_at: new Date().toISOString(), hostname: host, path, method: request.method, user_agent: ua }
       if (response && response.status >= 100 && response.status <= 599) event.status_code = response.status
       seen.add(request); queue.push(event); retained++
-      if (context) { try { context.waitUntil(flush()) } catch { void flush() } }
-      else if (queue.length >= batchSize) void flush()
-      else if (timer === undefined) timer = setTimeout(() => { timer = undefined; void flush() }, 100)
+      if (context) { try { context.waitUntil(flush()) } catch { fireAndForget() } }
+      else if (queue.length >= batchSize) fireAndForget()
+      else if (timer === undefined) timer = setTimeout(() => { timer = undefined; fireAndForget() }, 100)
       return true
     } catch { return false }
   }
@@ -158,11 +166,13 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
     trackRequest: (request, context) => track(request, undefined, context),
     trackResponse: (request, response, context) => track(request, response, context),
     flush,
-    async check(hostname) {
+    async check(value) {
+      const host = hostname(value)
+      if (!host) return null
       try {
         const response = await fetch(checkURL, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ hostname }), credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', signal: AbortSignal.timeout(1000),
+          body: JSON.stringify({ hostname: host }), credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', signal: AbortSignal.timeout(1000),
         })
         if (!response.ok) return null
         return await response.json() as ConnectionCheck

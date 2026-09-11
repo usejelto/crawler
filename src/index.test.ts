@@ -416,6 +416,71 @@ test('connection check creates no traffic and reports failure as null', async t 
 })
 
 test('unsafe endpoints and public keys fail at configuration, before any request work', () => {
-  for (const endpoint of ['http://analytics.example.test', 'https://user:password@example.test', 'https://example.test?secret=x']) assert.throws(() => createCrawlerTracker({ ...options, endpoint }), TypeError)
+  for (const endpoint of ['http://analytics.example.test', 'https://user:password@example.test', 'https://example.test?secret=x', 'https://analytics.example.test/base', 'https://analytics.example.test/base/']) assert.throws(() => createCrawlerTracker({ ...options, endpoint }), TypeError)
   assert.throws(() => createCrawlerTracker({ ...options, apiKey: 'prd_public' }), TypeError)
+})
+
+test('a batch never mixes hostnames; an unregistered host cannot sink another hostname\'s batch', async t => {
+  const original = globalThis.fetch
+  const posts: { hostname: string }[][] = []
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body))
+    posts.push(body.events.map((event: { hostname: string }) => ({ hostname: event.hostname })))
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => { globalThis.fetch = original })
+  const tracker = createCrawlerTracker(options)
+  for (let i = 0; i < 3; i++) assert.equal(tracker.trackRequest(new Request(`https://shop.example/page/${i}`, { headers: { 'user-agent': 'Googlebot/2.1' } })), true)
+  assert.equal(tracker.trackRequest(new Request('https://other.test/', { headers: { 'user-agent': 'Googlebot/2.1' } })), true)
+  await tracker.flush()
+  assert.equal(posts.length, 2)
+  assert.ok(posts.every(events => new Set(events.map(event => event.hostname)).size === 1))
+  const shopBatch = posts.find(events => events[0]!.hostname === 'shop.example')
+  const otherBatch = posts.find(events => events[0]!.hostname === 'other.test')
+  assert.equal(shopBatch?.length, 3)
+  assert.equal(otherBatch?.length, 1)
+})
+
+test('check() validates and normalizes its hostname argument before any request', async t => {
+  const original = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = async () => { calls++; return new Response(JSON.stringify({ enabled: false, paused: false, verification: 'not_performed' })) }
+  t.after(() => { globalThis.fetch = original })
+  const tracker = createCrawlerTracker(options)
+  assert.equal(await tracker.check('bad host!'), null)
+  assert.equal(calls, 0)
+})
+
+test('the byte cap and control-character check run before the bandwidth regex', async t => {
+  const original = globalThis.fetch
+  globalThis.fetch = async () => new Response('{}', { status: 202 })
+  t.after(() => { globalThis.fetch = original })
+  const tracker = createCrawlerTracker(options)
+  const oversized = `bot ${'a'.repeat(2048)}`
+  assert.equal(tracker.trackRequest(request('/page', oversized)), false)
+})
+
+test('a fire-and-forget flush never escapes trackRequest as an unhandled rejection', async t => {
+  const original = globalThis.fetch
+  const originalRace = Promise.race
+  globalThis.fetch = async () => new Response('{}', { status: 202 })
+  Promise.race = () => { throw new Error('drain failure') }
+  const rejections: unknown[] = []
+  const onUnhandledRejection = (reason: unknown) => { rejections.push(reason) }
+  process.on('unhandledRejection', onUnhandledRejection)
+  t.after(() => {
+    globalThis.fetch = original
+    Promise.race = originalRace
+    process.off('unhandledRejection', onUnhandledRejection)
+  })
+  const tracker = createCrawlerTracker(options)
+  for (let i = 0; i < 20; i++) assert.equal(tracker.trackRequest(request(`/batch/${i}`)), true)
+  // Give the microtask queue two turns to surface any unhandled rejection.
+  await new Promise<void>(resolve => setImmediate(resolve))
+  await new Promise<void>(resolve => setImmediate(resolve))
+  assert.deepEqual(rejections, [])
+})
+
+test('the browser entry throws at import time instead of shipping a server-only key client-side', async () => {
+  await assert.rejects(import('../dist/browser.js'), TypeError)
 })
