@@ -1,0 +1,15 @@
+dist/
+GUIDE.md
+*.tgz
+
+# Local dependencies, test tools and environment configuration.
+node_modules/
+.contracts/
+__pycache__/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+
+/release-artifacts/

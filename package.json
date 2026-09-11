@@ -1,0 +1,45 @@
+{
+  "name": "@jelto/crawler",
+  "version": "1.0.0",
+  "description": "Optional server crawler request reporting for Jelto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usejelto/crawler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usejelto/crawler/issues"
+  },
+  "homepage": "https://github.com/usejelto/crawler",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "GUIDE.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "prepack": "node scripts/prepare-package.mjs",
+    "pretest": "npm run build",
+    "test": "node --test src/index.test.ts",
+    "preconformance": "npm run build",
+    "conformance": "node --test src/index.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "typescript": "^5.9.3"
+  }
+}
