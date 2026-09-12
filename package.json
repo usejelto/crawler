@@ -9,7 +9,7 @@
   "bugs": {
     "url": "https://github.com/usejelto/crawler/issues"
   },
-  "homepage": "https://github.com/usejelto/crawler",
+  "homepage": "https://jelto.io/docs/sdk/crawler",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -42,5 +42,9 @@
   "devDependencies": {
     "@types/node": "^24.9.2",
     "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
