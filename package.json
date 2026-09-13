@@ -1,6 +1,6 @@
 {
   "name": "@jelto/crawler",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Optional server crawler request reporting for Jelto",
   "repository": {
     "type": "git",
