@@ -9,8 +9,6 @@ summary: "Report crawler requests from your server and verify the separate datas
 
 Add optional server tracking to see bots that do not execute your website JavaScript. Website-detected bots and server crawler requests have different coverage and remain separate from human website analytics.
 
-> **Not published yet.** Replace `REPLACE_WITH_PUBLISHED_JELTO_CRAWLER_PACKAGE` with the package address after publication. The prepared import is `@jelto/crawler`.
-
 ## Prepare the connection
 
 1. Register your public website hostname in Jelto.
@@ -25,10 +23,10 @@ Add optional server tracking to see bots that do not execute your website JavaSc
 
 ## Add server middleware
 
-Install the published package in your own server project after replacing the placeholder:
+The package is published on npm as `@jelto/crawler`; its source and releases are at [usejelto/crawler](https://github.com/usejelto/crawler). Install it in your own server project:
 
 ```sh
-npm install REPLACE_WITH_PUBLISHED_JELTO_CRAWLER_PACKAGE
+npm install @jelto/crawler
 ```
 
 Node.js 22 or a Fetch-compatible runtime with Web Crypto and `AbortSignal.timeout` is required. Initialize one tracker in a server-only module:

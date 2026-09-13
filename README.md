@@ -42,11 +42,11 @@ Long Retry-After values drop a batch rather than retry early. Server termination
 and queue overflow can lose events; use waitUntil on short-lived runtimes and
 flush on graceful Node shutdown. This is an optional best-effort analytics path.
 
-From this repository root, run `npm ci` and `npm pack`. Packing rebuilds the exports
-and includes the current installation guide. In your website project, install
-the local artifact with `npm install /path/to/jelto-crawler-1.0.0.tgz`.
-The package is currently distributed as a local tarball. `npm run conformance`
-rebuilds and tests the exported JavaScript; run it twice before release.
+The package is published on npm as `@jelto/crawler`; in your website project,
+run `npm install @jelto/crawler`. To build from this repository root instead,
+run `npm ci` and `npm pack`; packing rebuilds the exports and includes the
+current installation guide. `npm run conformance` rebuilds and tests the
+exported JavaScript; run it twice before release.
 
 The tarball includes full framework, rotation, coverage and erasure instructions
 in `GUIDE.md`, generated from the pinned `vendor/jelto/crawler.md` input.
@@ -75,8 +75,7 @@ Questions, bug reports and documentation improvements are welcome. See
 [Contributing](https://github.com/usejelto/crawler/blob/main/CONTRIBUTING.md),
 [Code of Conduct](https://github.com/usejelto/crawler/blob/main/CODE_OF_CONDUCT.md), and
 [Security policy](https://github.com/usejelto/crawler/blob/main/SECURITY.md).
-Until the public repository is available, these files are also included in the
-source root; contact [taha@jelto.io](mailto:taha@jelto.io) for help.
+Contact [taha@jelto.io](mailto:taha@jelto.io) for anything else.
 
 Jelto-owned software and associated documentation use the [MIT license](LICENSE).
 Third-party materials retain their own terms, including the Contributor Covenant
