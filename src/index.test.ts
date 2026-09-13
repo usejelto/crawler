@@ -22,7 +22,7 @@ test('wire contract strips query and fragment, ignores forwarding headers, and h
   assert.equal(sent[0]!.url, 'https://analytics.example.test/api/v1/crawls')
   const { init } = sent[0]!
   assert.equal(init.credentials, 'omit')
-  assert.equal(init.redirect, 'error')
+  assert.equal(init.redirect, 'manual')
   const headers = new Headers(init.headers)
   assert.deepEqual([...headers.keys()].sort(), ['authorization', 'content-type'])
   assert.equal(headers.get('authorization'), `Bearer ${options.apiKey}`)
@@ -483,4 +483,30 @@ test('a fire-and-forget flush never escapes trackRequest as an unhandled rejecti
 
 test('the browser entry throws at import time instead of shipping a server-only key client-side', async () => {
   await assert.rejects(import('../dist/browser.js'), TypeError)
+})
+
+test('a redirect is never followed or retried: manual mode returns the 3xx to the caller', async t => {
+  const original = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = async () => { calls++; return new Response(null, { status: 307, headers: { Location: 'https://elsewhere.test/api/v1/crawls' } }) }
+  t.after(() => { globalThis.fetch = original })
+  const tracker = createCrawlerTracker(options)
+  assert.equal(tracker.trackRequest(request()), true)
+  await tracker.flush()
+  assert.equal(calls, 1)
+  assert.equal(await tracker.check('example.test'), null)
+  assert.equal(calls, 2)
+})
+
+test('package exports resolve every server runtime condition before the browser guard', () => {
+  // Bundlers walk the exports object in key order and take the first active
+  // condition. Wrangler activates browser, so a server condition must come first
+  // or the bare import resolves to the guard and the build fails.
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { exports: { '.': Record<string, string> } }
+  const entry = pkg.exports['.']
+  const keys = Object.keys(entry)
+  assert.equal(keys[0], 'types')
+  assert.equal(entry.browser, './dist/browser.js')
+  for (const condition of ['workerd', 'worker', 'edge-light', 'bun', 'deno', 'import']) assert.equal(entry[condition], './dist/index.js', condition)
+  for (const condition of ['workerd', 'worker', 'edge-light', 'bun', 'deno']) assert.ok(keys.indexOf(condition) < keys.indexOf('browser'), `${condition} must precede browser`)
 })

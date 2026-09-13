@@ -93,9 +93,12 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
     for (let attempt = 0; attempt < 3; attempt++) {
       let response: Response | undefined
       try {
+        // manual: a redirect is never followed (the key must not travel to another
+        // origin) and its 3xx is a final, non-retryable answer below. workerd rejects
+        // redirect: error outright, so error would silently disable delivery there.
         response = await fetch(ingestURL, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          body, credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', signal: AbortSignal.timeout(1000),
+          body, credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'manual', signal: AbortSignal.timeout(1000),
         })
         if (response.ok || (response.status < 500 && response.status !== 429)) return
       } catch { /* The customer's response never depends on reporting. */ }
@@ -172,7 +175,7 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
       try {
         const response = await fetch(checkURL, {
           method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ hostname: host }), credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', signal: AbortSignal.timeout(1000),
+          body: JSON.stringify({ hostname: host }), credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'manual', signal: AbortSignal.timeout(1000),
         })
         if (!response.ok) return null
         return await response.json() as ConnectionCheck
