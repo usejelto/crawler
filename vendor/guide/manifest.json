@@ -2,7 +2,7 @@
   "name": "crawler-guide",
   "version": "0.1.0",
   "producer": "docs",
-  "producer_commit": "9f2a0954317059dc7a8ac22476a0e242a9fcbb1d",
+  "producer_commit": "65528b17820f7ea09fe39c796ae2993582384d3a",
   "files": {
     "crawler.md": {
       "source": "content/sdk/crawler.md",
