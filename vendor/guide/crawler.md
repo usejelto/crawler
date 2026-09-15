@@ -12,14 +12,14 @@ Add optional server tracking to see bots that do not execute your website JavaSc
 ## Prepare the connection
 
 1. Register your public website hostname in Jelto.
-2. Open **Settings → Traffic & usage → Server crawler tracking → Set up server tracking**.
+2. Open **Settings → Traffic & usage → Server crawlers**.
 3. Create a server crawler key with only `crawlers:write`. Copy it into your server's secret environment as `JELTO_CRAWLER_KEY`. It is shown once and must never appear in browser code.
 4. Set `JELTO_API_ORIGIN` to the main Jelto API origin shown for your setup. A custom script/tracking subdomain does not expose the authenticated crawler API.
 
 
 [![Wide Server crawler tracking settings with the enable and save controls outlined and a callout identifying the private server-key creation control.](../images/24-crawler-setup.png)](../images/24-crawler-setup.png)
 
-*Create a crawlers:write server key, install server tracking, enable collection and verify a real crawler request.*
+*Create a crawlers:write server key, install server tracking, check the connection, then enable collection and wait for real crawler requests.*
 
 ## Add server middleware
 
@@ -53,16 +53,16 @@ Do not convert arbitrary client headers into a trusted public hostname; configur
 
 ## Check, enable and verify
 
-Run this once from your server:
+After deploying the middleware, run this once from your server while collection is still disabled:
 
 ```ts
 const evidence = await crawlers.check('example.com')
 console.log(evidence)
 ```
 
-The hostname must match your registered public host. A successful check validates the connection but creates no crawler traffic. Then enable **Enable server crawler collection** and save in Traffic & usage.
+The hostname must match your registered public host. A successful check validates the connection but creates no crawler traffic. After a successful check, turn on **Enable server crawler collection** and save in **Settings → Traffic & usage → Server crawlers**.
 
-Deploy the middleware and wait for real eligible crawler requests. Refresh **Connection details**, then read the server source in [Bot activity](../guides/understand-bot-activity.md). Do not label a synthetic user-agent test as evidence of a real Googlebot visit.
+Wait for real eligible crawler requests. Refresh **Connection activity**, then read the server source in [Bot activity](../guides/understand-bot-activity.md). Do not label a synthetic user-agent test as evidence of a real Googlebot visit.
 
 ## Coverage and reliability
 
