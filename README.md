@@ -18,8 +18,11 @@ crawlers.trackResponse(request, response, context) // context.waitUntil is optio
 ```
 
 Use a server-held website key with only `crawlers:write`. Register your website
-hostname, run `await crawlers.check('example.com')` from the server, then enable
-Server crawlers in Traffic & usage. A check creates no traffic.
+hostname, install the integration, then run `await crawlers.check('example.com')`
+from the server while collection is disabled. After a successful check, enable
+collection and save in **Settings → Traffic & usage → Server crawlers**. A check
+creates no traffic. Refresh **Connection activity** to see when eligible crawler
+requests have been received.
 
 `trackRequest` and `trackResponse` return a boolean indicating whether the
 in-memory queue accepted the observation. They never wait for network delivery.
