@@ -52,7 +52,7 @@ current installation guide. `npm run conformance` rebuilds and tests the
 exported JavaScript; run it twice before release.
 
 The tarball includes full framework, rotation, coverage and erasure instructions
-in `GUIDE.md`, generated from the pinned `vendor/jelto/crawler.md` input.
+in `GUIDE.md`, generated from the pinned `vendor/guide/crawler.md` input.
 The [public integration guide](https://jelto.io/docs/sdk/crawler) covers the same setup.
 
 ## Standalone development
