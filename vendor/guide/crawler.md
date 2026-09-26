@@ -13,13 +13,13 @@ Add optional server tracking to see bots that do not execute your website JavaSc
 
 1. Register your public website hostname in Jelto.
 2. Open **Settings → Traffic & usage → Server crawlers**.
-3. Create a server crawler key with only `crawlers:write`. Copy it into your server's secret environment as `JELTO_CRAWLER_KEY`. It is shown once and must never appear in browser code.
+3. Create a crawler API key (`jk_…`) with only `crawlers:write`. Copy it into your server's secret environment as `JELTO_CRAWLER_KEY`. It is shown once and must never appear in browser code.
 4. Set `JELTO_API_ORIGIN` to the main Jelto API origin shown for your setup. A custom script/tracking subdomain does not expose the authenticated crawler API.
 
 
-[![Wide Server crawler tracking settings with the enable and save controls outlined and a callout identifying the private server-key creation control.](../images/24-crawler-setup.png)](../images/24-crawler-setup.png)
+[![Wide Server crawler tracking settings with the enable and save controls outlined and a callout identifying the private API key creation control.](../images/24-crawler-setup.png)](../images/24-crawler-setup.png)
 
-*Create a crawlers:write server key, install server tracking, check the connection, then enable collection and wait for real crawler requests.*
+*Create a crawlers:write API key, install server tracking, check the connection, then enable collection and wait for real crawler requests.*
 
 ## Add server middleware
 
