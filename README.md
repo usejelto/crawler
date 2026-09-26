@@ -17,12 +17,9 @@ crawlers.trackResponse(request, response, context) // context.waitUntil is optio
 // A middleware without the final response uses trackRequest(request, context).
 ```
 
-Use a server-held website key with only `crawlers:write`. Register your website
-hostname, install the integration, then run `await crawlers.check('example.com')`
-from the server while collection is disabled. After a successful check, enable
-collection and save in **Settings → Traffic & usage → Server crawlers**. A check
-creates no traffic. Refresh **Connection activity** to see when eligible crawler
-requests have been received.
+Use a server-held Jelto API key (`jk_…`) scoped to your website with only
+`crawlers:write`. Register your website hostname, install the integration, then
+follow [Verify it works](#verify-it-works).
 
 `trackRequest` and `trackResponse` return a boolean indicating whether the
 in-memory queue accepted the observation. They never wait for network delivery.
@@ -54,6 +51,12 @@ exported JavaScript; run it twice before release.
 The tarball includes full framework, rotation, coverage and erasure instructions
 in `GUIDE.md`, generated from the pinned `vendor/guide/crawler.md` input.
 The [public integration guide](https://jelto.io/docs/sdk/crawler) covers the same setup.
+
+## Verify it works
+
+1. From the server, while collection is still disabled, run `await crawlers.check('example.com')`; it returns connection evidence, or null on failure. A check creates no traffic.
+2. After a successful check, enable collection and save in **Settings → Traffic & usage → Server crawlers**.
+3. Once real eligible crawler requests arrive, refresh **Connection activity** to see when they were received.
 
 ## Standalone development
 

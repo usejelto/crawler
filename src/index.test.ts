@@ -415,7 +415,7 @@ test('connection check creates no traffic and reports failure as null', async t 
   assert.equal(await tracker.check('example.test'), null)
 })
 
-test('unsafe endpoints and public keys fail at configuration, before any request work', () => {
+test('unsafe endpoints and product IDs passed as API keys fail at configuration, before any request work', () => {
   for (const endpoint of ['http://analytics.example.test', 'https://user:password@example.test', 'https://example.test?secret=x', 'https://analytics.example.test/base', 'https://analytics.example.test/base/']) assert.throws(() => createCrawlerTracker({ ...options, endpoint }), TypeError)
   assert.throws(() => createCrawlerTracker({ ...options, apiKey: 'prd_public' }), TypeError)
 })

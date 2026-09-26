@@ -75,7 +75,7 @@ function retryDelay(response: Response | undefined, attempt: number): number {
 export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
   if (typeof window !== 'undefined') throw new TypeError('Jelto crawler tracking belongs on the server')
   const base = endpoint(options.endpoint)
-  if (!/^jk_[A-Za-z0-9_-]{43}$/.test(options.apiKey)) throw new TypeError('A server-held Jelto crawlers:write key is required')
+  if (!/^jk_[A-Za-z0-9_-]{43}$/.test(options.apiKey)) throw new TypeError('A server-held Jelto API key with crawlers:write is required')
   const apiKey = options.apiKey
   const publicHost = options.publicOrigin ? hostname(endpoint(options.publicOrigin).hostname) : undefined
   if (options.publicOrigin && !publicHost) throw new TypeError('Jelto crawler publicOrigin must have a valid website hostname')
