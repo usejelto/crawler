@@ -2,11 +2,11 @@
   "name": "crawler-signatures",
   "version": "0.1.0",
   "producer": "contracts",
-  "producer_commit": "c524d00c43aac4723107199ad3413d974e8acaa9",
+  "producer_commit": "fbeaa6be564dbe1587d63bf5260bff365e5e4951",
   "files": {
     "bots.yaml": {
       "source": "spec/signatures/bots.yaml",
-      "sha256": "73382309e7b99b4b99439e13e3467ddff29dae0b4e7aa742a348919ff52c1a84"
+      "sha256": "4b34bcd44ac1ba0d5cda9969c5349cb0e81fd1391a02da9889612f2722c77600"
     }
   }
 }
