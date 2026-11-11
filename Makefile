@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: build test conformance package
+.PHONY: build test conformance package security
 
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
@@ -22,3 +22,5 @@ conformance: node_modules
 
 package: build
 	npm pack
+
+security: secrets
