@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: build test conformance package security
+.PHONY: build test conformance package security check npm-audit
 
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
@@ -23,4 +23,11 @@ conformance: node_modules
 package: build
 	npm pack
 
-security: secrets workflow-audit osv
+# The whole gate: what to run before a pull request, and what CI runs.
+# Conformance runs twice beside it in CI, as before.
+check: test build package security
+
+security: secrets workflow-audit osv npm-audit
+
+npm-audit:
+	npm audit --audit-level=moderate --package-lock-only
