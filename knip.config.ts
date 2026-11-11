@@ -10,6 +10,9 @@
 import type { KnipConfig } from 'knip'
 
 const config: KnipConfig = {
+  // The opengrep rule test cases, which `opengrep test .opengrep` (make sast)
+  // pairs with the rule of the same name instead of importing them.
+  entry: ['.opengrep/*.{ts,mjs}'],
   // The Makefile runs Prettier (`make format-check`); Knip reads package.json
   // scripts, not the Makefile.
   ignoreDependencies: ['prettier'],
