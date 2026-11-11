@@ -45,11 +45,20 @@
     "conformance": "node --test src/index.test.ts"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.9.2",
-    "typescript": "^5.9.3"
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
+    "knip": "^6.45.1",
+    "prettier": "^3.10.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
   }
 }
