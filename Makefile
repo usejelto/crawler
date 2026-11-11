@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: build test conformance package security check npm-audit lint
+.PHONY: build test conformance package security check npm-audit lint deadcode
 
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
@@ -28,9 +28,13 @@ package: build
 lint: node_modules
 	npx --no-install eslint --max-warnings 0 .
 
+# Knip (knip.config.ts): files nothing imports, unused exports and
+# dependencies, and dependencies used but not declared.
+deadcode: node_modules knip
+
 # The whole gate: what to run before a pull request, and what CI runs.
 # Conformance runs twice beside it in CI, as before.
-check: lint test build package security
+check: lint deadcode test build package security
 
 security: secrets workflow-audit osv npm-audit
 
