@@ -23,4 +23,4 @@ conformance: node_modules
 package: build
 	npm pack
 
-security: secrets
+security: secrets workflow-audit
