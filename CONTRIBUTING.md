@@ -37,7 +37,7 @@ changes require the appropriate tests and two consecutive conformance passes
 before certification. Package changes must also pass packaging checks.
 
 Tests live beside the implementation in `src/`. The bot catalog and guide in
-`vendor/jelto/` are pinned inputs; do not edit those copies. Report changes to the
+`vendor/signatures/` and `vendor/guide/` are pinned inputs; do not edit those copies. Report changes to the
 signature catalog in the contracts repository and guide corrections as a docs
 issue here. The guide source and hashes are recorded in the vendor manifest.
 This component's conformance command tests its exported JavaScript without a
