@@ -129,8 +129,7 @@ export function createCrawlerTracker(options: TrackerOptions): CrawlerTracker {
               events.push(next)
               queue.splice(i, 1)
             }
-            let job: Promise<void>
-            job = send(events).catch(() => {}).finally(() => { retained -= events.length; inFlight.delete(job) })
+            const job: Promise<void> = send(events).catch(() => {}).finally(() => { retained -= events.length; inFlight.delete(job) })
             inFlight.add(job)
           }
           if (inFlight.size) await Promise.race(inFlight)

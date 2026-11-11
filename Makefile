@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: build test conformance package security check npm-audit
+.PHONY: build test conformance package security check npm-audit lint
 
 # The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
 # arrive from the contracts repository as a checksummed snapshot; `make inputs`
@@ -23,9 +23,14 @@ conformance: node_modules
 package: build
 	npm pack
 
+# ESLint's recommended JavaScript and TypeScript rules (eslint.config.js) over
+# the source, the tests and the packaging script.
+lint: node_modules
+	npx --no-install eslint --max-warnings 0 .
+
 # The whole gate: what to run before a pull request, and what CI runs.
 # Conformance runs twice beside it in CI, as before.
-check: test build package security
+check: lint test build package security
 
 security: secrets workflow-audit osv npm-audit
 
