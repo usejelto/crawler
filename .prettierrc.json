@@ -1,0 +1,14 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 300,
+  "arrowParens": "avoid",
+  "trailingComma": "all",
+  "objectWrap": "collapse",
+  "overrides": [
+    {
+      "files": ["*.json"],
+      "options": { "objectWrap": "preserve" }
+    }
+  ]
+}

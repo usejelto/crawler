@@ -1,0 +1,12 @@
+# Prettier reads .gitignore as well; these are the tracked files it leaves alone.
+# Build output and release staging.
+dist/
+release-artifacts/
+# Vendored snapshots: their producers format them, and a checksum pins each file.
+vendor/
+# npm writes the lockfile.
+package-lock.json
+# Markdown: Prettier pads every table column to its widest cell, so one new row
+# rewrites the whole table, and CODE_OF_CONDUCT.md is the Contributor Covenant
+# text as published.
+*.md
