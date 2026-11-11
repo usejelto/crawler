@@ -50,7 +50,7 @@ jobs:
           python-version: '3.14'
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: .nvmrc
           package-manager-cache: false
       - name: Pinned npm packaging toolchain
         # Outside the lockfile on purpose: the packaging toolchain itself, pinned
@@ -88,3 +88,21 @@ jobs:
             *.tgz
           if-no-files-found: error
           retention-days: 14
+
+  oldest-node:
+    name: Tests on the oldest supported Node
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          # The oldest Node line package.json `engines` accepts, at its latest
+          # release; the job above runs the whole gate on the .nvmrc release.
+          node-version: '22.23.4'
+          package-manager-cache: false
+      - name: Tests
+        run: make test

@@ -15,7 +15,9 @@ For installation and account help, see [SUPPORT.md](SUPPORT.md).
 
 ## Local development
 
-Node.js 24, npm, and Make for development, matching CI. The package supports Node.js 22 or compatible Fetch runtimes.
+Node.js 24.22.2 (the release `.nvmrc` pins), npm, and Make for development,
+matching CI. The package supports Node.js 22 or compatible Fetch runtimes; CI
+runs the tests on the oldest Node 22 release as well.
 
 Fork and clone this repository, create a branch from `main`, and run commands
 from this component's root. The standalone checkout contains its build inputs;
