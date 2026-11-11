@@ -1,6 +1,11 @@
 .DEFAULT_GOAL := test
 .PHONY: build test conformance package
 
+# The shared quality targets (hooks, tools, secrets, osv, workflow-audit, sast)
+# arrive from the contracts repository as a checksummed snapshot; `make inputs`
+# in the backend refreshes it, and nothing edits it here.
+include vendor/quality/quality.mk
+
 node_modules: package.json package-lock.json
 	npm ci
 	@touch $@
