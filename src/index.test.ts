@@ -11,8 +11,13 @@ function request(path = '/pricing?email=private@example.test#secret', ua = 'Chat
 test('wire contract strips query and fragment, ignores forwarding headers, and has no identity', async t => {
   const original = globalThis.fetch
   const sent: { url: string; init: RequestInit }[] = []
-  globalThis.fetch = async (url, init) => { sent.push({ url: String(url), init: init! }); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (url, init) => {
+    sent.push({ url: String(url), init: init! })
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const req = request()
   assert.equal(tracker.trackResponse(req, new Response(null, { status: 200 })), true)
@@ -32,17 +37,20 @@ test('wire contract strips query and fragment, ignores forwarding headers, and h
   const event = body.events[0]
   assert.match(event.id, /^[0-9a-f-]{36}$/)
   assert.match(event.occurred_at, /Z$/)
-  assert.deepEqual({ ...event, id: undefined, occurred_at: undefined }, {
-    id: undefined, occurred_at: undefined, hostname: 'example.test', path: '/pricing', method: 'GET', user_agent: 'ChatGPT-User/1.0', status_code: 200,
-  })
+  assert.deepEqual({ ...event, id: undefined, occurred_at: undefined }, { id: undefined, occurred_at: undefined, hostname: 'example.test', path: '/pricing', method: 'GET', user_agent: 'ChatGPT-User/1.0', status_code: 200 })
   for (const forbidden of ['private', 'secret', 'attacker', 'cookie', 'visitor', 'session', 'install', 'forwarded']) assert.equal(String(init.body).includes(forbidden), false)
 })
 
 test('request-only mode is status-unknown, explicit publicOrigin handles an internal URL', async t => {
   const original = globalThis.fetch
   const bodies: unknown[] = []
-  globalThis.fetch = async (_url, init) => { bodies.push(JSON.parse(String(init?.body))); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    bodies.push(JSON.parse(String(init?.body)))
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker({ ...options, publicOrigin: 'https://public.example.test' })
   assert.equal(tracker.trackRequest(new Request('http://internal:8080/robots.txt?token=hidden', { headers: { 'user-agent': 'Googlebot/2.1' } })), true)
   await tracker.flush()
@@ -55,8 +63,13 @@ test('request-only mode is status-unknown, explicit publicOrigin handles an inte
 test('prefilter preserves crawler discovery and content files but drops humans and assets', async t => {
   const original = globalThis.fetch
   let count = 0
-  globalThis.fetch = async (_url, init) => { count += JSON.parse(String(init?.body)).events.length; return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    count += JSON.parse(String(init?.body)).events.length
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const documents = ['/robots.txt', '/sitemap.xml', '/sitemap.xml.gz', '/sitemaps/pages-1.xml.gz', '/llms.txt', '/llms-full.txt', '/docs/intro.md', '/docs/guide.pdf']
   for (const path of documents) assert.equal(tracker.trackRequest(request(path, 'Googlebot/2.1')), true, path)
@@ -74,18 +87,23 @@ test('the bandwidth filter admits every shared known and generic signature, even
   const catalog = readFileSync(new URL('../vendor/signatures/bots.yaml', import.meta.url), 'utf8')
   const block = catalog.split('\nsignatures:\n')[1]?.split('\ncategory_labels:\n')[0]
   assert.ok(block)
-  const needles = block.split('\n').filter(line => line.trimStart().startsWith('-')).map(line => {
-    const match = line.match(/^\s*-\s*\{\s*needle:\s*(?:"([^"]+)"|([^,]+)),/)
-    assert.ok(match, `unreadable signature: ${line}`)
-    return (match[1] ?? match[2]!).trim()
-  })
+  const needles = block
+    .split('\n')
+    .filter(line => line.trimStart().startsWith('-'))
+    .map(line => {
+      const match = line.match(/^\s*-\s*\{\s*needle:\s*(?:"([^"]+)"|([^,]+)),/)
+      assert.ok(match, `unreadable signature: ${line}`)
+      return (match[1] ?? match[2]!).trim()
+    })
   const generic = catalog.match(/^\s+generic_tokens:\s*\[([^\]]+)\]/m)
   assert.ok(generic)
   needles.push(...generic[1]!.split(',').map(token => token.trim()))
   assert.ok(needles.length)
   const original = globalThis.fetch
   globalThis.fetch = async () => new Response('{}', { status: 202 })
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const missing: string[] = []
   for (const needle of needles) {
@@ -98,8 +116,13 @@ test('the bandwidth filter admits every shared known and generic signature, even
 test('new answer-agent requests are delivered without broad provider-brand matches', async t => {
   const original = globalThis.fetch
   const sent: { user_agent: string }[] = []
-  globalThis.fetch = async (_url, init) => { sent.push(...JSON.parse(String(init?.body)).events); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    sent.push(...JSON.parse(String(init?.body)).events)
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const tokens = ['Amzn-User', 'MistralAI-User', 'MistralAI-Index', 'MistralAI-Training', 'Kimi-User', 'Grok-DeepSearch', 'xAI-Grok', 'Qwen-User', 'meta-webindexer']
   const agents = tokens.map(token => `Mozilla/5.0 Chrome/128 Safari/537.36 ${token}/1.0`)
@@ -108,14 +131,22 @@ test('new answer-agent requests are delivered without broad provider-brand match
     assert.equal(tracker.trackRequest(request('/article', `Mozilla/5.0 Chrome/128 Safari/537.36 ${token}`)), false, token)
   }
   await tracker.flush()
-  assert.deepEqual(sent.map(event => event.user_agent), agents)
+  assert.deepEqual(
+    sent.map(event => event.user_agent),
+    agents,
+  )
 })
 
 test('malformed paths and invalid hosts never poison an otherwise valid batch', async t => {
   const original = globalThis.fetch
   const sent: { hostname: string; path: string }[] = []
-  globalThis.fetch = async (_url, init) => { sent.push(...JSON.parse(String(init?.body)).events); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    sent.push(...JSON.parse(String(init?.body)).events)
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   for (const path of ['/invalid%', '/invalid%GG', '/invalid%FF', '/invalid%C0%AF', '/invalid%00', '/invalid%0A', '/invalid%0D', '/invalid%5C', '/%2Felsewhere', `/${'a'.repeat(2048)}`]) {
     assert.equal(tracker.trackRequest(request(path)), false, path)
@@ -125,20 +156,31 @@ test('malformed paths and invalid hosts never poison an otherwise valid batch', 
   }
   assert.equal(tracker.trackRequest(request('/valid')), true)
   await tracker.flush()
-  assert.deepEqual(sent.map(({ hostname, path }) => ({ hostname, path })), [{ hostname: 'example.test', path: '/valid' }])
+  assert.deepEqual(
+    sent.map(({ hostname, path }) => ({ hostname, path })),
+    [{ hostname: 'example.test', path: '/valid' }],
+  )
 })
 
 test('path filtering uses one decoded path while the wire preserves encoded delimiters', async t => {
   const original = globalThis.fetch
   const sent: { path: string }[] = []
-  globalThis.fetch = async (_url, init) => { sent.push(...JSON.parse(String(init?.body)).events); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    sent.push(...JSON.parse(String(init?.body)).events)
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   for (const path of ['/%61pi/data', '/%5Fnext/data', '/%61ssets/image.svg', '/script%2Ejs']) assert.equal(tracker.trackRequest(request(path)), false, path)
   const paths = ['/docs/why%3F', '/docs/tag%23name', '/docs/%252Fexample', `/${'界'.repeat(2047)}`]
   for (const path of paths) assert.equal(tracker.trackRequest(request(path)), true, path)
   await tracker.flush()
-  assert.deepEqual(sent.map(event => event.path), paths.map(path => new URL(path, 'https://example.test').pathname))
+  assert.deepEqual(
+    sent.map(event => event.path),
+    paths.map(path => new URL(path, 'https://example.test').pathname),
+  )
 })
 
 test('large valid Unicode paths are split into batches below the intake byte limit', async t => {
@@ -149,7 +191,9 @@ test('large valid Unicode paths are split into batches below the intake byte lim
     batches.push({ bytes: new TextEncoder().encode(body).byteLength, events: JSON.parse(body).events })
     return new Response('{}', { status: 202 })
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const paths = Array.from({ length: 20 }, (_unused, i) => `/${i}/${'🦋'.repeat(2040)}`)
   for (const path of paths) assert.equal(tracker.trackRequest(request(path)), true)
@@ -162,8 +206,13 @@ test('large valid Unicode paths are split into batches below the intake byte lim
 test('failures retry exactly twice with the same event ID and normalized body', async t => {
   const original = globalThis.fetch
   const bodies: string[] = []
-  globalThis.fetch = async (_url, init) => { bodies.push(String(init?.body)); return new Response('{}', { status: 503, headers: { 'Retry-After': '0' } }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async (_url, init) => {
+    bodies.push(String(init?.body))
+    return new Response('{}', { status: 503, headers: { 'Retry-After': '0' } })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   assert.equal(tracker.trackRequest(request()), true)
   await tracker.flush()
@@ -174,8 +223,13 @@ test('failures retry exactly twice with the same event ID and normalized body', 
 test('long Retry-After is respected by dropping instead of retrying early', async t => {
   const original = globalThis.fetch
   let calls = 0
-  globalThis.fetch = async () => { calls++; return new Response('{}', { status: 429, headers: { 'Retry-After': '60' } }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async () => {
+    calls++
+    return new Response('{}', { status: 429, headers: { 'Retry-After': '60' } })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   tracker.trackRequest(request())
   await tracker.flush()
@@ -191,7 +245,9 @@ test('each network attempt aborts after one second and exhausted timeouts resolv
     await new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }))
     throw new Error('unreachable')
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   // AbortSignal's native timer is unref'ed: keep the test runtime alive while
   // asserting it, just as a running customer's server does.
   const keepAlive = setInterval(() => {}, 100)
@@ -215,12 +271,15 @@ test('queues at most 100 observations, at most two requests, and batches at most
     assert.ok(body.events.length <= 20)
     assert.ok(new TextEncoder().encode(String(init?.body)).byteLength <= 65536)
     events += body.events.length
-    active++; peak = Math.max(peak, active)
+    active++
+    peak = Math.max(peak, active)
     await new Promise<void>(resolve => pending.push(resolve))
     active--
     return new Response('{}', { status: 202 })
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   let accepted = 0
   for (let i = 0; i < 125; i++) if (tracker.trackRequest(request(`/page/${i}`))) accepted++
@@ -247,11 +306,18 @@ test('sustained automatic reporting keeps drain waiters bounded while refilling 
   let activeWaiters = 0
   let peakWaiters = 0
   let delivered = 0
-  Promise.race = function<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>> {
+  Promise.race = function <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>> {
     activeWaiters++
     peakWaiters = Math.max(peakWaiters, activeWaiters)
     const result = originalRace.call(Promise, values) as Promise<Awaited<T>>
-    void result.then(() => { activeWaiters-- }, () => { activeWaiters-- })
+    void result.then(
+      () => {
+        activeWaiters--
+      },
+      () => {
+        activeWaiters--
+      },
+    )
     return result
   }
   globalThis.fetch = async (_url, init) => {
@@ -316,10 +382,16 @@ test('concurrent manual and waitUntil flush callers share delivery and restart a
     delivered.push(...paths)
     return new Response('{}', { status: 202 })
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const work: Promise<unknown>[] = []
-  const context = { waitUntil: (promise: Promise<unknown>) => { work.push(promise) } }
+  const context = {
+    waitUntil: (promise: Promise<unknown>) => {
+      work.push(promise)
+    },
+  }
   for (let run = 0; run < 2; run++) {
     const previous = work.at(-1)
     for (let i = 0; i < 10; i++) tracker.trackRequest(request(`/run/${run}/${i}`), context)
@@ -343,7 +415,7 @@ test('an enqueue at drain settlement starts delivery before the old flush promis
   const work: Promise<unknown>[] = []
   const tracker = createCrawlerTracker(options)
   let enqueueAtSettlement = true
-  Promise.race = function<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>> {
+  Promise.race = function <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>> {
     const result = originalRace.call(Promise, values) as Promise<Awaited<T>>
     // Schedule just after the drain resumes, before any separate finally
     // wrapper could clear a latch on its already-completed worker.
@@ -351,7 +423,11 @@ test('an enqueue at drain settlement starts delivery before the old flush promis
       if (!enqueueAtSettlement) return
       enqueueAtSettlement = false
       queueMicrotask(() => {
-        tracker.trackRequest(request('/late'), { waitUntil: promise => { work.push(promise) } })
+        tracker.trackRequest(request('/late'), {
+          waitUntil: promise => {
+            work.push(promise)
+          },
+        })
       })
     })
     return result
@@ -360,7 +436,10 @@ test('an enqueue at drain settlement starts delivery before the old flush promis
     delivered.push(...JSON.parse(String(init?.body)).events.map((event: { path: string }) => event.path))
     return new Response('{}', { status: 202 })
   }
-  t.after(() => { globalThis.fetch = originalFetch; Promise.race = originalRace })
+  t.after(() => {
+    globalThis.fetch = originalFetch
+    Promise.race = originalRace
+  })
   tracker.trackRequest(request('/first'))
   const first = tracker.flush()
   await first
@@ -373,12 +452,26 @@ test('an enqueue at drain settlement starts delivery before the old flush promis
 test('waitUntil owns delivery and does not change the customer response', async t => {
   const original = globalThis.fetch
   let release!: () => void
-  globalThis.fetch = async () => { await new Promise<void>(resolve => { release = resolve }); return new Response('{}', { status: 202 }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async () => {
+    await new Promise<void>(resolve => {
+      release = resolve
+    })
+    return new Response('{}', { status: 202 })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const work: Promise<unknown>[] = []
   const tracker = createCrawlerTracker(options)
   const response = new Response('customer content', { status: 404 })
-  assert.equal(tracker.trackResponse(request(), response, { waitUntil: promise => { work.push(promise) } }), true)
+  assert.equal(
+    tracker.trackResponse(request(), response, {
+      waitUntil: promise => {
+        work.push(promise)
+      },
+    }),
+    true,
+  )
   assert.equal(await response.text(), 'customer content')
   assert.equal(work.length, 1)
   release()
@@ -388,12 +481,29 @@ test('waitUntil owns delivery and does not change the customer response', async 
 test('only the user-agent header is read and a failing context stays best effort', async t => {
   const original = globalThis.fetch
   globalThis.fetch = async () => new Response('{}', { status: 202 })
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const req = request()
   const names: string[] = []
-  Object.defineProperty(req, 'headers', { value: { get(name: string) { names.push(name); if (name !== 'user-agent') throw new Error('private header read'); return 'Googlebot/2.1' } } })
+  Object.defineProperty(req, 'headers', {
+    value: {
+      get(name: string) {
+        names.push(name)
+        if (name !== 'user-agent') throw new Error('private header read')
+        return 'Googlebot/2.1'
+      },
+    },
+  })
   const tracker = createCrawlerTracker(options)
-  assert.equal(tracker.trackRequest(req, { waitUntil() { throw new Error('runtime finished') } }), true)
+  assert.equal(
+    tracker.trackRequest(req, {
+      waitUntil() {
+        throw new Error('runtime finished')
+      },
+    }),
+    true,
+  )
   await tracker.flush()
   assert.deepEqual(names, ['user-agent'])
 })
@@ -406,12 +516,16 @@ test('connection check creates no traffic and reports failure as null', async t 
     assert.deepEqual(JSON.parse(String(init?.body)), { hostname: 'example.test' })
     return new Response(JSON.stringify({ enabled: false, paused: false, verification: 'not_performed', checked_hostname: 'example.test' }))
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   assert.equal((await tracker.check('example.test'))?.verification, 'not_performed')
   await tracker.flush()
   assert.deepEqual(calls, ['https://analytics.example.test/api/v1/crawls/check'])
-  globalThis.fetch = async () => { throw new Error('offline') }
+  globalThis.fetch = async () => {
+    throw new Error('offline')
+  }
   assert.equal(await tracker.check('example.test'), null)
 })
 
@@ -420,7 +534,7 @@ test('unsafe endpoints and product IDs passed as API keys fail at configuration,
   assert.throws(() => createCrawlerTracker({ ...options, apiKey: 'prd_public' }), TypeError)
 })
 
-test('a batch never mixes hostnames; an unregistered host cannot sink another hostname\'s batch', async t => {
+test("a batch never mixes hostnames; an unregistered host cannot sink another hostname's batch", async t => {
   const original = globalThis.fetch
   const posts: { hostname: string }[][] = []
   globalThis.fetch = async (_url, init) => {
@@ -428,7 +542,9 @@ test('a batch never mixes hostnames; an unregistered host cannot sink another ho
     posts.push(body.events.map((event: { hostname: string }) => ({ hostname: event.hostname })))
     return new Response('{}', { status: 202 })
   }
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   for (let i = 0; i < 3; i++) assert.equal(tracker.trackRequest(new Request(`https://shop.example/page/${i}`, { headers: { 'user-agent': 'Googlebot/2.1' } })), true)
   assert.equal(tracker.trackRequest(new Request('https://other.test/', { headers: { 'user-agent': 'Googlebot/2.1' } })), true)
@@ -444,8 +560,13 @@ test('a batch never mixes hostnames; an unregistered host cannot sink another ho
 test('check() validates and normalizes its hostname argument before any request', async t => {
   const original = globalThis.fetch
   let calls = 0
-  globalThis.fetch = async () => { calls++; return new Response(JSON.stringify({ enabled: false, paused: false, verification: 'not_performed' })) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async () => {
+    calls++
+    return new Response(JSON.stringify({ enabled: false, paused: false, verification: 'not_performed' }))
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   assert.equal(await tracker.check('bad host!'), null)
   assert.equal(calls, 0)
@@ -454,7 +575,9 @@ test('check() validates and normalizes its hostname argument before any request'
 test('the byte cap and control-character check run before the bandwidth regex', async t => {
   const original = globalThis.fetch
   globalThis.fetch = async () => new Response('{}', { status: 202 })
-  t.after(() => { globalThis.fetch = original })
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   const oversized = `bot ${'a'.repeat(2048)}`
   assert.equal(tracker.trackRequest(request('/page', oversized)), false)
@@ -464,9 +587,13 @@ test('a fire-and-forget flush never escapes trackRequest as an unhandled rejecti
   const original = globalThis.fetch
   const originalRace = Promise.race
   globalThis.fetch = async () => new Response('{}', { status: 202 })
-  Promise.race = () => { throw new Error('drain failure') }
+  Promise.race = () => {
+    throw new Error('drain failure')
+  }
   const rejections: unknown[] = []
-  const onUnhandledRejection = (reason: unknown) => { rejections.push(reason) }
+  const onUnhandledRejection = (reason: unknown) => {
+    rejections.push(reason)
+  }
   process.on('unhandledRejection', onUnhandledRejection)
   t.after(() => {
     globalThis.fetch = original
@@ -488,8 +615,13 @@ test('the browser entry throws at import time instead of shipping a server-only 
 test('a redirect is never followed or retried: manual mode returns the 3xx to the caller', async t => {
   const original = globalThis.fetch
   let calls = 0
-  globalThis.fetch = async () => { calls++; return new Response(null, { status: 307, headers: { Location: 'https://elsewhere.test/api/v1/crawls' } }) }
-  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async () => {
+    calls++
+    return new Response(null, { status: 307, headers: { Location: 'https://elsewhere.test/api/v1/crawls' } })
+  }
+  t.after(() => {
+    globalThis.fetch = original
+  })
   const tracker = createCrawlerTracker(options)
   assert.equal(tracker.trackRequest(request()), true)
   await tracker.flush()

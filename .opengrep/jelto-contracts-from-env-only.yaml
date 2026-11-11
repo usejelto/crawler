@@ -12,20 +12,20 @@ rules:
     paths:
       include:
         # Source, tests, scripts, package scripts, the Makefile and workflows.
-        - "*.ts"
-        - "*.mts"
-        - "*.cts"
-        - "*.js"
-        - "*.mjs"
-        - "*.cjs"
-        - "*.json"
-        - "*.sh"
-        - "*.py"
-        - "*.yml"
-        - "*.yaml"
-        - "Makefile"
-        - "*.mk"
-        - "/.opengrep/jelto-contracts-from-env-only.*"
+        - '*.ts'
+        - '*.mts'
+        - '*.cts'
+        - '*.js'
+        - '*.mjs'
+        - '*.cjs'
+        - '*.json'
+        - '*.sh'
+        - '*.py'
+        - '*.yml'
+        - '*.yaml'
+        - 'Makefile'
+        - '*.mk'
+        - '/.opengrep/jelto-contracts-from-env-only.*'
     pattern-either:
       # ../contracts, ../../jelto-contracts, ..\contracts
       - pattern-regex: \.\.[\\/]+(?:\.\.[\\/]+)*(?:jelto-)?contracts\b
